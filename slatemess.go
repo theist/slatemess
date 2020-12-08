@@ -175,6 +175,18 @@ func sendMessageToSlack(c config) error {
 	return nil
 }
 
+func readFileNameAsStr(filename string) (string, error) {
+	messageFile, err := os.Open(filename)
+	if err != nil {
+		return "", fmt.Errorf("ERROR opening file %v: %v", filename, err)
+	}
+	messageBytes, err := ioutil.ReadAll(messageFile)
+	if err != nil {
+		return "", fmt.Errorf("ERROR reading file %v: %v", filename, err)
+	}
+	return string(messageBytes), nil
+}
+
 func main() {
 	var cfg config
 	log.Print("slatemess started")
@@ -229,17 +241,13 @@ func main() {
 		cfg.message = *messageArg
 	}
 	if *fileArg != "" {
-		messageFile, err := os.Open(*fileArg)
+		msg, err := readFileNameAsStr(*fileArg)
 		if err != nil {
-			fmt.Printf("ERROR opening file %v: %v", *fileArg, err)
+			fmt.Println(err)
 			os.Exit(1)
 		}
-		messageBytes, err := ioutil.ReadAll(messageFile)
-		if err != nil {
-			fmt.Printf("ERROR reading file %v: %v", *fileArg, err)
-			os.Exit(1)
-		}
-		cfg.message = string(messageBytes)
+		cfg.message = msg
+
 	}
 	log.Printf("Message: %#v", cfg)
 	err = cfg.verifyConfig()
