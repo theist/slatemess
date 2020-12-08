@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -190,11 +191,12 @@ func main() {
 	}
 	piped := (fi.Mode() & os.ModeCharDevice) == 0
 
-	iconArg := flag.String("icon", "", "Override icon")
-	userArg := flag.String("user", "", "Override user")
-	hookArg := flag.String("hook", "", "Override Hook URL")
-	channelArg := flag.String("channel", "", "Override channel")
-
+	iconArg := flag.String("icon", "", "Override default icon from hook")
+	userArg := flag.String("user", "", "Override default user from hook")
+	channelArg := flag.String("channel", "", "Override default user from hook")
+	hookArg := flag.String("hook", "", "Override Hook provided by ENV, if any")
+	messageArg := flag.String("message", "", "Provide a message by parameter")
+	fileArg := flag.String("file", "", "Provide a message by file")
 	flag.Parse()
 
 	if *iconArg != "" {
@@ -210,6 +212,11 @@ func main() {
 		os.Setenv("SLACK_CHANNEL", *channelArg)
 	}
 
+	if (piped && *fileArg != "") || (piped && *messageArg != "") || (*fileArg != "" && *messageArg != "") {
+		fmt.Printf("ERROR: -file, -message and 'piped' operation are mutually exclusive")
+		os.Exit(1)
+	}
+
 	// once here only work with env or "message"
 	cfg.hook = os.Getenv("SLACK_HOOK")
 	cfg.icon = os.Getenv("SLACK_ICON")
@@ -218,14 +225,32 @@ func main() {
 	if piped {
 		cfg.message = readStdin()
 	}
+	if *messageArg != "" {
+		cfg.message = *messageArg
+	}
+	if *fileArg != "" {
+		messageFile, err := os.Open(*fileArg)
+		if err != nil {
+			fmt.Printf("ERROR opening file %v: %v", *fileArg, err)
+			os.Exit(1)
+		}
+		messageBytes, err := ioutil.ReadAll(messageFile)
+		if err != nil {
+			fmt.Printf("ERROR reading file %v: %v", *fileArg, err)
+			os.Exit(1)
+		}
+		cfg.message = string(messageBytes)
+	}
 	log.Printf("Message: %#v", cfg)
 	err = cfg.verifyConfig()
 	if err != nil {
-		log.Printf("Error validating parameters: %v", err)
+		fmt.Printf("ERROR validating parameters: %v\n", err)
 		os.Exit(1)
 	}
 	err = sendMessageToSlack(cfg)
 	if err != nil {
-		log.Printf("Error Generating payload %v", err)
+		fmt.Printf("ERROR Generating payload %v\n", err)
+		os.Exit(1)
 	}
+	log.Printf("Message Sent")
 }
