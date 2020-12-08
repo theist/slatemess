@@ -27,6 +27,8 @@ type config struct {
 	message  string
 }
 
+var logDebug *log.Logger
+
 func readStdin() string {
 	scanner := bufio.NewScanner(os.Stdin)
 	text := ""
@@ -113,14 +115,14 @@ func messageComplete(message string, c config) (string, error) {
 	} else {
 		msg = `{ "text": "` + message + `" }`
 	}
-	log.Printf("payload = %+v", msg)
+	logDebug.Printf("payload = %+v", msg)
 	js, err := cheapjson.Unmarshal([]byte(msg))
 	if err != nil {
 		return "", err
 	}
 	if c.channel != "" {
 		if hasKey("channel", js) {
-			log.Printf("WARN: channel in the payload, your specified channel %v won't be used", c.channel)
+			logDebug.Printf("WARN: channel in the payload, your specified channel %v won't be used", c.channel)
 		} else {
 			ch := js.AddField("channel")
 			ch.AsString(c.channel)
@@ -128,7 +130,7 @@ func messageComplete(message string, c config) (string, error) {
 	}
 	if c.userName != "" {
 		if hasKey("username", js) {
-			log.Printf("WARN: username in the payload, your specified username %v won't be used", c.userName)
+			logDebug.Printf("WARN: username in the payload, your specified username %v won't be used", c.userName)
 		} else {
 			un := js.AddField("username")
 			un.AsString(c.userName)
@@ -136,7 +138,7 @@ func messageComplete(message string, c config) (string, error) {
 	}
 	if c.icon != "" {
 		if hasKey("icon_emoji", js) {
-			log.Printf("WARN: icon_emoji in the payload, your specified icon %v won't be used", c.icon)
+			logDebug.Printf("WARN: icon_emoji in the payload, your specified icon %v won't be used", c.icon)
 		} else {
 			ie := js.AddField("icon_emoji")
 			ie.AsString(c.icon)
@@ -161,7 +163,7 @@ func sendMessageToSlack(c config) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("payload: %v", payload)
+	logDebug.Printf("payload: %v", payload)
 
 	res, err := resty.R().
 		SetBody(payload).
@@ -189,7 +191,7 @@ func readFileNameAsStr(filename string) (string, error) {
 
 func main() {
 	var cfg config
-	log.Print("slatemess started")
+	logDebug = log.New(os.Stderr, "[debug] ", log.LstdFlags)
 	godotenv.Load()
 	homeConfigPath, err := homedir.Expand("~/.slatemess")
 	if err == nil {
@@ -199,7 +201,8 @@ func main() {
 
 	fi, err := os.Stdin.Stat()
 	if err != nil {
-		log.Fatal("Unable to read stdin >", err)
+		fmt.Printf("ERROR reading stdin > %v\n", err)
+		os.Exit(1)
 	}
 	piped := (fi.Mode() & os.ModeCharDevice) == 0
 
@@ -209,6 +212,7 @@ func main() {
 	hookArg := flag.String("hook", "", "Override Hook provided by ENV, if any")
 	messageArg := flag.String("message", "", "Provide a message by parameter")
 	fileArg := flag.String("file", "", "Provide a message by file")
+	debugArg := flag.Bool("debug", false, "Print debug info")
 	flag.Parse()
 
 	if *iconArg != "" {
@@ -227,6 +231,9 @@ func main() {
 	if (piped && *fileArg != "") || (piped && *messageArg != "") || (*fileArg != "" && *messageArg != "") {
 		fmt.Printf("ERROR: -file, -message and 'piped' operation are mutually exclusive")
 		os.Exit(1)
+	}
+	if !*debugArg {
+		logDebug.SetOutput(ioutil.Discard)
 	}
 
 	// once here only work with env or "message"
@@ -249,7 +256,7 @@ func main() {
 		cfg.message = msg
 
 	}
-	log.Printf("Message: %#v", cfg)
+	logDebug.Printf("Message: %#v", cfg)
 	err = cfg.verifyConfig()
 	if err != nil {
 		fmt.Printf("ERROR validating parameters: %v\n", err)
@@ -260,5 +267,5 @@ func main() {
 		fmt.Printf("ERROR Generating payload %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("Message Sent")
+	logDebug.Printf("Message Sent")
 }
