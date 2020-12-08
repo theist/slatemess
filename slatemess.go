@@ -16,6 +16,7 @@ import (
 	"github.com/acrazing/cheapjson"
 	"github.com/joho/godotenv"
 	"github.com/mitchellh/go-homedir"
+	"github.com/tidwall/pretty"
 	"gopkg.in/resty.v1"
 )
 
@@ -25,6 +26,7 @@ type config struct {
 	userName string
 	channel  string
 	message  string
+	dry      bool
 }
 
 var logDebug *log.Logger
@@ -153,7 +155,24 @@ func messageComplete(message string, c config) (string, error) {
 	return string(payload), nil
 }
 
-func sendMessageToSlack(c config) error {
+func toSlack(hook, payload string) error {
+	res, err := resty.R().
+		SetBody(payload).
+		Post(hook)
+	if err != nil {
+		return fmt.Errorf("Error sending message %v", err)
+	}
+	if res.IsError() {
+		return fmt.Errorf("slack api returned an error %v \"%v\"", res.Status(), string(res.Body()))
+	}
+	return nil
+}
+
+func toCurl(hook, payload string) {
+	fmt.Println("curl -X POST -H 'Content-type: application/json' " + hook + " --data '" + strings.TrimSpace(string(pretty.Pretty([]byte(payload)))) + "'")
+}
+
+func sendMessage(c config) error {
 	resty.SetDebug(false)
 	message, err := messageRender(c.message)
 	if err != nil {
@@ -164,16 +183,15 @@ func sendMessageToSlack(c config) error {
 		return err
 	}
 	logDebug.Printf("payload: %v", payload)
+	if c.dry {
+		toCurl(c.hook, payload)
+	} else {
+		err := toSlack(c.hook, payload)
+		if err != nil {
+			return err
+		}
+	}
 
-	res, err := resty.R().
-		SetBody(payload).
-		Post(c.hook)
-	if err != nil {
-		return fmt.Errorf("Error sending message %v", err)
-	}
-	if res.IsError() {
-		return fmt.Errorf("slack api returned an error %v \"%v\"", res.Status(), string(res.Body()))
-	}
 	return nil
 }
 
@@ -213,6 +231,7 @@ func main() {
 	messageArg := flag.String("message", "", "Provide a message by parameter")
 	fileArg := flag.String("file", "", "Provide a message by file")
 	debugArg := flag.Bool("debug", false, "Print debug info")
+	dryArg := flag.Bool("dry", false, "Will not send the payload to slack but print a curl command equivalent, with the computed payload")
 	flag.Parse()
 
 	if *iconArg != "" {
@@ -227,7 +246,6 @@ func main() {
 	if *channelArg != "" {
 		os.Setenv("SLACK_CHANNEL", *channelArg)
 	}
-
 	if (piped && *fileArg != "") || (piped && *messageArg != "") || (*fileArg != "" && *messageArg != "") {
 		fmt.Printf("ERROR: -file, -message and 'piped' operation are mutually exclusive")
 		os.Exit(1)
@@ -241,6 +259,7 @@ func main() {
 	cfg.icon = os.Getenv("SLACK_ICON")
 	cfg.channel = os.Getenv("SLACK_CHANNEL")
 	cfg.userName = os.Getenv("SLACK_USER")
+	cfg.dry = *dryArg
 	if piped {
 		cfg.message = readStdin()
 	}
@@ -262,7 +281,7 @@ func main() {
 		fmt.Printf("ERROR validating parameters: %v\n", err)
 		os.Exit(1)
 	}
-	err = sendMessageToSlack(cfg)
+	err = sendMessage(cfg)
 	if err != nil {
 		fmt.Printf("ERROR Generating payload %v\n", err)
 		os.Exit(1)
