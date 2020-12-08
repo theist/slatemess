@@ -12,6 +12,7 @@ require (
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/stretchr/testify v1.6.1 // indirect
+	github.com/tidwall/pretty v1.0.2
 	golang.org/x/text v0.3.4 // indirect
 	gopkg.in/resty.v1 v1.12.0
 )
