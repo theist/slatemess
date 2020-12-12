@@ -1,0 +1,50 @@
+{
+  "blocks": [
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "This is a demonstration of blocks message thru slatemess"
+      },
+      "accessory": {
+        "type": "image",
+        "image_url": "https://avatars3.githubusercontent.com/u/136464",
+        "alt_text": "theist!"
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*User*"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Editor*"
+        },
+        {
+          "type": "plain_text",
+          "text": "{{ .USERNAME }}"
+        },
+        {
+          "type": "plain_text",
+          "text": "{{ .EDITOR }}"
+        }
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "```Console Output```"
+      }
+    }
+  ]
+}
