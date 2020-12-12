@@ -57,7 +57,15 @@ func (c config) verifyConfig() error {
 
 func isJSON(s string) bool {
 	var js map[string]interface{}
-	return json.Unmarshal([]byte(s), &js) == nil
+
+	ugly := pretty.Ugly([]byte(s))
+	log.Printf("checking json for: %v", string(ugly))
+	err := json.Unmarshal(ugly, &js)
+	if err != nil {
+		log.Printf("Isn't json because: %v", err)
+		return false
+	}
+	return true
 }
 
 // checks string for problematic chars
@@ -115,7 +123,7 @@ func messageComplete(message string, c config) (string, error) {
 	if isJSON(message) {
 		msg = message
 	} else {
-		msg = `{ "text": "` + message + `" }`
+		msg = `{ "text": "` + messageSafe(message) + `" }`
 	}
 	logDebug.Printf("payload = %+v", msg)
 	js, err := cheapjson.Unmarshal([]byte(msg))
@@ -178,7 +186,7 @@ func sendMessage(c config) error {
 	if err != nil {
 		return err
 	}
-	payload, err := messageComplete(messageSafe(message), c)
+	payload, err := messageComplete(message, c)
 	if err != nil {
 		return err
 	}
