@@ -94,6 +94,20 @@ The resulting messages will be passed as they are if they're detected as a valid
 }
 ```
 
+Using this feature is possible to send rich format messages to slack using [slack `blocks` syntax](https://api.slack.com/reference/block-kit/blocks) there's a sample under `samples/blocks` that will generate a message similar to this
+
+![blocks message](https://github.com/theist/slatemess/blob/media/sample_message.png?raw=true)
+
+with the correct environment and a commandline like this:
+
+```shell
+slatemess -file samples/blocks -user slatemess -icon :ok_hand: -hook <hook_url>
+```
+
+**WARNING**: If a template contains a valid field `icon_emoji`, `channel` or `username` these won't be overwritten and will override any value passed by environment or variables
+
+**WARNING**: Once a message is detected as json it will be sent as is, but completed with `icon_emoji`, `channel` and `username` if aren't already present. That won't restrain you from sending an invalid message to slack that won't produce any message.
+
 ### Output as Curl
 
 If parameter flag `-dry` is used it will show a curl command with the appropiate data payload and parameters instead of posting it to slack.
