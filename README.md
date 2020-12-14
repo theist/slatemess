@@ -104,7 +104,7 @@ with the correct environment and a commandline like this:
 slatemess -file samples/blocks -user slatemess -icon :ok_hand: -hook <hook_url>
 ```
 
-**WARNING**: If a template contains a valid field `icon_emoji`, `channel` or `username` these won't be overwritten and will override any value passed by environment or variables
+**WARNING**: If a template contains a valid field `icon_emoji`, `channel` or `username` these won't be overwritten and will override any value passed by environment or parameters.
 
 **WARNING**: Once a message is detected as json it will be sent as is, but completed with `icon_emoji`, `channel` and `username` if aren't already present. That won't restrain you from sending an invalid message to slack that won't produce any message.
 
