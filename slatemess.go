@@ -59,10 +59,10 @@ func isJSON(s string) bool {
 	var js map[string]interface{}
 
 	ugly := pretty.Ugly([]byte(s))
-	log.Printf("checking json for: %v", string(ugly))
+	logDebug.Printf("checking json for: %v", string(ugly))
 	err := json.Unmarshal(ugly, &js)
 	if err != nil {
-		log.Printf("Isn't json because: %v", err)
+		logDebug.Printf("Isn't json because: %v", err)
 		return false
 	}
 	return true
