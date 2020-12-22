@@ -223,7 +223,8 @@ func main() {
 	if err == nil {
 		godotenv.Load(homeConfigPath)
 	}
-	godotenv.Load("/etc/slatemess.cfg", "/etc/slack.cfg")
+	godotenv.Load("/etc/slatemess.cfg")
+	godotenv.Load("/etc/slack.cfg")
 
 	fi, err := os.Stdin.Stat()
 	if err != nil {
