@@ -26,6 +26,8 @@ Usage of slatemess:
         Print debug info
   -dry
         Will not send the payload to slack but print a curl command equivalent, with the computed payload
+  -fence
+        embed the text in a code fence, so it will be displayed as a code block
   -file string
         Provide a message by file
   -hook string
@@ -107,6 +109,10 @@ slatemess -file samples/blocks -user slatemess -icon :ok_hand: -hook <hook_url>
 **WARNING**: If a template contains a valid field `icon_emoji`, `channel` or `username` these won't be overwritten and will override any value passed by environment or parameters.
 
 **WARNING**: Once a message is detected as json it will be sent as is, but completed with `icon_emoji`, `channel` and `username` if aren't already present. That won't restrain you from sending an invalid message to slack that won't produce any message.
+
+### Using code output for simple messages
+
+Using the parameter `-fence` will enclose the message in code fences so it will be displayed as a code block. But note that if you intended it to be a valid json payload, the code fences will convert it to a basic message and it will be displayed as is.
 
 ### Output as Curl
 
