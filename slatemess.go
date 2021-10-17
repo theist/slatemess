@@ -47,14 +47,14 @@ func fenceIt(text string) string {
 
 func (c config) verifyConfig() error {
 	if c.message == "" {
-		return fmt.Errorf("Missing Message")
+		return fmt.Errorf("missing message")
 	}
 	u, err := url.Parse(c.hook)
 	if err != nil {
-		return fmt.Errorf("Error in url %v: %v", c.hook, err)
+		return fmt.Errorf("error in url %v: %v", c.hook, err)
 	}
 	if u.Scheme != "https" {
-		return fmt.Errorf("Invalid Hook, invalid scheme %v", u.Scheme)
+		return fmt.Errorf("invalid hook, invalid scheme %v", u.Scheme)
 	}
 	return nil
 }
@@ -101,11 +101,11 @@ func messageRender(message string) (string, error) {
 	var render bytes.Buffer
 	t, err := template.New("message").Parse(message)
 	if err != nil {
-		return "", fmt.Errorf("Error rendering slack template: %v", err)
+		return "", fmt.Errorf("error rendering slack template: %v", err)
 	}
 	err = t.Execute(&render, dictEnviron())
 	if err != nil {
-		return "", fmt.Errorf("Error generating slack payload: %v", err)
+		return "", fmt.Errorf("error generating slack payload: %v", err)
 	}
 	return render.String(), nil
 }
@@ -172,7 +172,7 @@ func toSlack(hook, payload string) error {
 		SetBody(payload).
 		Post(hook)
 	if err != nil {
-		return fmt.Errorf("Error sending message %v", err)
+		return fmt.Errorf("error sending message %v", err)
 	}
 	if res.IsError() {
 		return fmt.Errorf("slack api returned an error %v \"%v\"", res.Status(), string(res.Body()))
