@@ -41,6 +41,10 @@ func readStdin() string {
 	return text
 }
 
+func fenceIt(text string) string {
+	return "```" + text + "```"
+}
+
 func (c config) verifyConfig() error {
 	if c.message == "" {
 		return fmt.Errorf("Missing Message")
@@ -240,6 +244,7 @@ func main() {
 	messageArg := flag.String("message", "", "Provide a message by parameter")
 	fileArg := flag.String("file", "", "Provide a message by file")
 	debugArg := flag.Bool("debug", false, "Print debug info")
+	fenceArg := flag.Bool("fence", false, "embed the text in a code fence, so it will be displayed as a code block")
 	dryArg := flag.Bool("dry", false, "Will not send the payload to slack but print a curl command equivalent, with the computed payload")
 	flag.Parse()
 
@@ -283,6 +288,9 @@ func main() {
 		}
 		cfg.message = msg
 
+	}
+	if *fenceArg {
+		cfg.message = fenceIt(cfg.message)
 	}
 	logDebug.Printf("Message: %#v", cfg)
 	err = cfg.verifyConfig()
