@@ -128,7 +128,6 @@ func messageComplete(message string, c config) (string, error) {
 	} else {
 		msg = `{ "text": "` + messageSafe(message) + `" }`
 	}
-	logDebug.Printf("payload = %+v", msg)
 	js, err := gabs.ParseJSON([]byte(msg))
 	if err != nil {
 		return "", err
@@ -155,12 +154,8 @@ func messageComplete(message string, c config) (string, error) {
 		}
 	}
 
-	data := js.Bytes()
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(payload), nil
+	logDebug.Printf("gabs object +%v", js)
+	return js.String(), nil
 }
 
 func toSlack(hook, payload string) error {
