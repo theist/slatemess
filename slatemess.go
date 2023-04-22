@@ -251,8 +251,8 @@ func main() {
 	if *channelArg != "" {
 		os.Setenv("SLACK_CHANNEL", *channelArg)
 	}
-	if (piped && *fileArg != "") || (piped && *messageArg != "") || (*fileArg != "" && *messageArg != "") {
-		fmt.Printf("ERROR: -file, -message and 'piped' operation are mutually exclusive")
+	if *fileArg != "" && *messageArg != "" {
+		fmt.Printf("ERROR: -file and -message mode are mutually exclusive\n")
 		os.Exit(1)
 	}
 	if !*debugArg {
@@ -265,13 +265,12 @@ func main() {
 	cfg.channel = os.Getenv("SLACK_CHANNEL")
 	cfg.userName = os.Getenv("SLACK_USER")
 	cfg.dry = *dryArg
-	if piped {
-		cfg.message = readStdin()
-	}
 	if *messageArg != "" {
+		piped = false
 		cfg.message = *messageArg
 	}
 	if *fileArg != "" {
+		piped = false
 		msg, err := readFileNameAsStr(*fileArg)
 		if err != nil {
 			fmt.Println(err)
@@ -279,6 +278,9 @@ func main() {
 		}
 		cfg.message = msg
 
+	}
+	if piped {
+		cfg.message = readStdin()
 	}
 	if *fenceArg {
 		cfg.message = fenceIt(cfg.message)
