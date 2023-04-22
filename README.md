@@ -68,6 +68,8 @@ Message can be passed by three mutually exclusive methods to `slatemess`
 - `-file` parameter. The file will be read and passed to the message as a string
 - "piped" mode: using `command | slatemess` the standard output of the message will be passed as a string to slatemess.
 
+If `-message` or `-file` are present in a piped operation the contents of stdin will be silently ignored.
+
 ### Templating
 
 The message will be interpreted as a [template using built in golang `text/template`](https://golang.org/pkg/text/template/)
