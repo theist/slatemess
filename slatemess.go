@@ -13,7 +13,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/acrazing/cheapjson"
+	"github.com/Jeffail/gabs/v2"
 	"github.com/joho/godotenv"
 	"github.com/mitchellh/go-homedir"
 	"github.com/tidwall/pretty"
@@ -117,9 +117,8 @@ func messageSafe(message string) string {
 	return safe
 }
 
-func hasKey(key string, j *cheapjson.Value) bool {
-	k := j.Get(key)
-	return k != nil
+func hasKey(key string, js *gabs.Container) bool {
+	return js.Exists(key)
 }
 
 func messageComplete(message string, c config) (string, error) {
@@ -130,7 +129,7 @@ func messageComplete(message string, c config) (string, error) {
 		msg = `{ "text": "` + messageSafe(message) + `" }`
 	}
 	logDebug.Printf("payload = %+v", msg)
-	js, err := cheapjson.Unmarshal([]byte(msg))
+	js, err := gabs.ParseJSON([]byte(msg))
 	if err != nil {
 		return "", err
 	}
@@ -138,28 +137,25 @@ func messageComplete(message string, c config) (string, error) {
 		if hasKey("channel", js) {
 			logDebug.Printf("WARN: channel in the payload, your specified channel %v won't be used", c.channel)
 		} else {
-			ch := js.AddField("channel")
-			ch.AsString(c.channel)
+			js.Set(c.channel, "channel")
 		}
 	}
 	if c.userName != "" {
 		if hasKey("username", js) {
 			logDebug.Printf("WARN: username in the payload, your specified username %v won't be used", c.userName)
 		} else {
-			un := js.AddField("username")
-			un.AsString(c.userName)
+			js.Set(c.userName, "username")
 		}
 	}
 	if c.icon != "" {
 		if hasKey("icon_emoji", js) {
 			logDebug.Printf("WARN: icon_emoji in the payload, your specified icon %v won't be used", c.icon)
 		} else {
-			ie := js.AddField("icon_emoji")
-			ie.AsString(c.icon)
+			js.Set(c.icon, "icon_emoji")
 		}
 	}
 
-	data := js.Value()
+	data := js.Bytes()
 	payload, err := json.Marshal(data)
 	if err != nil {
 		return "", err
